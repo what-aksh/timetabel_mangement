@@ -6,129 +6,75 @@ DAY_START = "08:00"
 DAY_END = "18:00"
 
 
-def minutes_to_time(minutes):
-    hours = minutes // 60
-    minutes = minutes % 60
-
-    return f"{hours:02d}:{minutes:02d}"
-
-
 def find_free_slots(classes, day):
-
-    day_classes = []
-
-    for class_entry in classes:
-        if class_entry.day.lower() == day.lower():
-            day_classes.append(class_entry)
-
-    if len(day_classes) == 0:
-        return [(DAY_START, DAY_END)]
+    day_classes = [
+        c for c in classes
+        if c.day.lower() == day.lower()
+    ]
 
     day_classes.sort(
-        key=lambda x: time_to_minutes(x.start_time)
+        key=lambda c: time_to_minutes(c.start_time)
     )
 
     free_slots = []
-    current_time = time_to_minutes(DAY_START)
+    current = time_to_minutes(DAY_START)
 
-    for class_entry in day_classes:
+    for c in day_classes:
+        start = time_to_minutes(c.start_time)
+        end = time_to_minutes(c.end_time)
 
-        start = time_to_minutes(class_entry.start_time)
-        end = time_to_minutes(class_entry.end_time)
-
-        if current_time < start:
+        if current < start:
             free_slots.append(
-                (
-                    minutes_to_time(current_time),
-                    minutes_to_time(start)
-                )
+                f"{current // 60:02d}:{current % 60:02d} - "
+                f"{start // 60:02d}:{start % 60:02d}"
             )
 
-        if end > current_time:
-            current_time = end
+        current = max(current, end)
 
-    end_of_day = time_to_minutes(DAY_END)
+    end = time_to_minutes(DAY_END)
 
-    if current_time < end_of_day:
+    if current < end:
         free_slots.append(
-            (
-                minutes_to_time(current_time),
-                minutes_to_time(end_of_day)
-            )
+            f"{current // 60:02d}:{current % 60:02d} - "
+            f"{end // 60:02d}:{end % 60:02d}"
         )
 
     return free_slots
 
 
-def display_free_slots(classes, day):
+def show_free_slots(classes, day):
+    slots = find_free_slots(classes, day)
 
-    free_slots = find_free_slots(classes, day)
+    print(f"\n--- Free Slots: {day.capitalize()} ---")
 
-    print(f"\n========== FREE SLOTS - {day.capitalize()} ==========")
-
-    if len(free_slots) == 0:
-        print("No free slots found.")
-        return
-
-    for start, end in free_slots:
-        print(f"{start} - {end}")
-
-    print("======================================")
+    if not slots:
+        print("No free slots.")
+    else:
+        for slot in slots:
+            print(slot)
 
 
-def total_classes(classes):
-    return len(classes)
+def show_analytics(classes):
 
-
-def total_scheduled_hours(classes):
-
-    total_minutes = 0
-
-    for class_entry in classes:
-
-        start = time_to_minutes(class_entry.start_time)
-        end = time_to_minutes(class_entry.end_time)
-
-        total_minutes += end - start
-
-    return round(total_minutes / 60, 2)
-
-
-def total_clashes(classes):
-
-    clashes = find_clashes(classes)
-
-    return len(clashes)
-
-
-def busiest_day(classes):
-
-    if len(classes) == 0:
-        return "No classes"
-
+    total_hours = 0
     day_counts = {}
 
-    for class_entry in classes:
+    for c in classes:
+        start = time_to_minutes(c.start_time)
+        end = time_to_minutes(c.end_time)
 
-        day = class_entry.day
+        total_hours += end - start
+        day_counts[c.day] = day_counts.get(c.day, 0) + 1
 
-        if day not in day_counts:
-            day_counts[day] = 0
+    clashes = len(find_clashes(classes))
 
-        day_counts[day] += 1
+    busiest = "None"
+    if day_counts:
+        busiest = max(day_counts, key=day_counts.get)
 
-    busiest = max(day_counts, key=day_counts.get)
-
-    return busiest
-
-
-def display_analytics(classes):
-
-    print("\n========== TIMETABLE ANALYTICS ==========")
-
-    print(f"Total classes       : {total_classes(classes)}")
-    print(f"Scheduled hours     : {total_scheduled_hours(classes)}")
-    print(f"Timetable clashes   : {total_clashes(classes)}")
-    print(f"Busiest day         : {busiest_day(classes)}")
-
-    print("==========================================")
+    print("\n========== ANALYTICS ==========")
+    print(f"Total classes     : {len(classes)}")
+    print(f"Scheduled hours   : {total_hours / 60:.2f}")
+    print(f"Total clashes     : {clashes}")
+    print(f"Busiest day       : {busiest}")
+    print("===============================")
