@@ -270,23 +270,3 @@ Project Status
 This project was developed as part of the VITyarthi – Build Your Own Project evaluation.
 
 Status: Completed 
-
-
-### Your GitHub root should now look like this
-
-```text
-📁 Smart-Student-Timetable
-│
-├── 📄 README.md          ← THIS FILE
-├── 📄 statement.md
-│
-├── 📁 src
-│   ├── main.py
-│   ├── schedule.py
-│   ├── timetable.py
-│   ├── validators.py
-│   ├── clash_detector.py
-│   └── timetable_tools.py
-│
-└── 📁 tests
-    └── test_timetable.py
